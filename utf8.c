@@ -19,9 +19,46 @@
  */
 #include "utf8.h"
 
-/* TODO - Consolidate code between utf8_strlen and utf8_valid by providing some kind of walking function */
-
 static const char* UTF8_BOM_INST = UTF8_BOM;
+
+/**
+ * The iterator type used for iterating strings.
+ */
+typedef struct utf8_iterator_t
+{
+    const char* str;
+    const char* iter;
+    utf8_codepoint_t cp;
+    int32_t cp_mask;
+    int32_t cp_len;
+    size_t str_len;
+} utf8_iterator_t;
+
+/**
+ * An enumeration of UTF-8 iterator statuses.
+ */
+typedef enum utf8_iterator_status_t
+{
+    UTF8_ITERATOR_END = 0,
+    UTF8_ITERATOR_OK = 1,
+    UTF8_ITERATOR_INVALID_CODEPOINT
+} utf8_iterator_status_t;
+
+/**
+ * \brief Initializes an iterator.
+ *
+ * \param iter The iterator.
+ * \param str The string to iterate.
+ */
+void utf8_iterate_begin(utf8_iterator_t* iter, const char* str);
+
+/**
+ * \brief Moves the iterator to the next character.
+ *
+ * \param iter The iterator.
+ * \return A utf8_iterator_status_t describing the iterator's status.
+ */
+int32_t utf8_iterate_move(utf8_iterator_t* iter);
 
 /**
  * \brief Gets information about the given codepoint.
@@ -148,6 +185,52 @@ bool_t utf8_has_bom(const char* str)
 }
 
 /**
+ * \brief Initializes an iterator.
+ *
+ * \param iter The iterator.
+ * \param str The string to iterate.
+ */
+void utf8_iterate_begin(utf8_iterator_t* iter, const char* str)
+{
+    iter->str = str;
+    iter->str_len = 0;
+    iter->iter = str;
+    iter->cp = 0;
+    iter->cp_mask = 0;
+    iter->cp_len = 0;
+}
+
+/**
+ * \brief Moves the iterator to the next character.
+ *
+ * \param iter The iterator.
+ * \return A utf8_iterator_status_t describing the iterator's status.
+ */
+int32_t utf8_iterate_move(utf8_iterator_t* iter)
+{
+    if (!*iter->iter)
+    {
+        return UTF8_ITERATOR_END;
+    }
+
+    if (!utf8_get_codepoint_info(iter->str, &iter->cp_mask, &iter->cp_len))
+    {
+        return UTF8_ITERATOR_INVALID_CODEPOINT;
+    }
+
+    iter->cp = utf8_encode_info(iter->str, iter->cp_mask, iter->cp_len);
+    if (iter->cp == UTF8_INVALID_CODEPOINT)
+    {
+        return UTF8_ITERATOR_INVALID_CODEPOINT;
+    }
+
+    iter->iter += iter->cp_len;
+    iter->str_len++;
+
+    return UTF8_ITERATOR_OK;
+}
+
+/**
  * \brief Gets the length of a UTF-8 string.
  *
  * \param str The string.
@@ -156,6 +239,28 @@ bool_t utf8_has_bom(const char* str)
  */
 size_t utf8_strlen(const char* str)
 {
+#if 1
+    utf8_iterator_t iter;
+    const char* str_iter = str;
+    int32_t status = 0;
+
+    /* Skip the BOM if it is present */
+    if (utf8_has_bom(str_iter))
+    {
+        str_iter += UTF8_BOM_STRLEN;
+    }
+    
+    /* Iteration keeps track of the actual string length for us */
+    utf8_iterate_begin(&iter, str_iter);
+    while ((status = utf8_iterate_move(&iter)) == UTF8_ITERATOR_OK);
+
+    if (status == UTF8_ITERATOR_INVALID_CODEPOINT)
+    {
+        return (size_t)UTF8_INVALID_STRING;
+    }
+
+    return iter.str_len;
+#else
     const char* iter = str;
     int32_t     mask = 0;
     int32_t     length_cp = 0;
@@ -191,6 +296,7 @@ size_t utf8_strlen(const char* str)
     }
 
     return length_str;
+#endif
 }
 
 /**
@@ -201,6 +307,20 @@ size_t utf8_strlen(const char* str)
  */
 bool_t utf8_valid(const char* str)
 {
+#if 1
+    utf8_iterator_t iter;
+    int32_t status = 0;
+
+    utf8_iterate_begin(&iter, str);
+    while ((status = utf8_iterate_move(&iter)) == UTF8_ITERATOR_OK);
+
+    if (status == UTF8_ITERATOR_INVALID_CODEPOINT)
+    {
+        return false;
+    }
+
+    return true;
+#else
     const char* iter = str;
     int32_t     mask = 0;
     int32_t     length = 0;
@@ -228,6 +348,7 @@ bool_t utf8_valid(const char* str)
     }
 
     return true;
+#endif
 }
 
 /**
