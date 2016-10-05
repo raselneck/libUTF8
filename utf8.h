@@ -66,11 +66,6 @@ typedef enum utf8_error_t
 typedef int32_t utf8_codepoint_t;
 
 /**
- * The type used for iterating strings.
- */
-typedef struct utf8_iterator_t utf8_iterator_t;
-
-/**
  * \brief Encodes the given string data into a UTF-8 codepoint.
  *
  * \param str The string.
