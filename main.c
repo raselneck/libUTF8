@@ -13,7 +13,7 @@ FILE* fopen_wrapper(const char* fname, const char* mode)
 #define fopen fopen_wrapper
 #endif
 
-#define assert(test) if (test) puts("[PASSED] " #test); else puts("[FAILED] " #test)
+#define assert(test) if (test) puts("[passed] " #test); else puts("[FAILED] " #test)
 
 bool_t validate_file(const char* fname)
 {
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
         {
             if (validate_file(argv[index]))
             {
-                printf("[PASSED] '%s' contains valid UTF-8 text\n", argv[index]);
+                printf("[passed] '%s' contains valid UTF-8 text\n", argv[index]);
             }
             else
             {
@@ -99,5 +99,6 @@ int main(int argc, char** argv)
         }
     }
 
+    getchar();
     return 0;
 }
