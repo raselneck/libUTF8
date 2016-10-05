@@ -90,7 +90,7 @@ utf8_codepoint_t utf8_encode_info(const char* str, int32_t mask, int32_t length)
 
     /* So, we at least know that the first character exists and is legit */
     codepoint = *str & mask;
-    codepoint <<= (7 - length);
+    /* codepoint <<= (7 - length); */ /* Not necessary because of how the loop is structured */ 
 
     /* All bytes after the first have the same 0b10xxxxxx format */
     mask = 0b00111111;

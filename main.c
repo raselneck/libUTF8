@@ -71,10 +71,16 @@ int main(int argc, char** argv)
     assert(utf8_valid_codepoint(u00A2));
     assert(utf8_valid_codepoint(u20AC));
     assert(utf8_valid_codepoint(u10348));
+    assert(u0024 == 0x24);
+    assert(u00A2 == 0xA2);
+    assert(u20AC == 0x20AC);
+    assert(u10348 == 0x010348);
+    assert(utf8_encode(UTF8_BOM) == 0xFEFF);
+    assert(utf8_encode(UTF8_REPLACEMENT) == 0xFFFD);
     assert(!utf8_valid("\xFF\xEE"));
     assert(!utf8_valid("\xBE\xEF"));
     assert(!utf8_valid("\xFE"));
-    assert(utf8_valid_codepoint(utf8_encode("%")));
+    assert(utf8_valid_codepoint(utf8_encode("?")));
     assert(utf8_valid_codepoint(utf8_encode("\xE2\x82\xAC")));
 
     if (argc > 1)
@@ -92,5 +98,6 @@ int main(int argc, char** argv)
         }
     }
 
+    getchar();
     return 0;
 }
