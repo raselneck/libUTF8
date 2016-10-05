@@ -80,8 +80,8 @@ bool_t utf8_get_codepoint_info(const char* str, int32_t* mask, int32_t* length)
  * \brief Encodes the given string data into a UTF-8 codepoint.
  *
  * \param str The string.
- * \param mask The codepoint mask retrieved from utf8_char_info.
- * \param length The codepoint length retrieved from utf8_char_info.
+ * \param mask The codepoint mask retrieved from utf8_get_codepoint_info.
+ * \param length The codepoint length retrieved from utf8_get_codepoint_info.
  * \return The encoded codepoint.
  */
 utf8_codepoint_t utf8_encode_info(const char* str, int32_t mask, int32_t length)
@@ -120,7 +120,7 @@ utf8_codepoint_t utf8_encode(const char* str)
 {
     int32_t mask = 0;
     int32_t length = 0;
-    
+
     utf8_get_codepoint_info(str, &mask, &length);
     if (length == UTF8_INVALID_LENGTH)
     {
@@ -161,6 +161,12 @@ size_t utf8_strlen(const char* str)
     int32_t     length_cp = 0;
     size_t      length_str = 0;
     utf8_codepoint_t codepoint = 0;
+
+    /* Skip the BOM if it is present */
+    if (utf8_has_bom(str))
+    {
+        iter += UTF8_BOM_STRLEN;
+    }
 
     while (*iter)
     {
