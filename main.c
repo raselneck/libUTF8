@@ -33,7 +33,7 @@ bool_t validate_file(const char* fname)
     fileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    fileContents = (char*)malloc(fileSize);
+    fileContents = (char*)malloc(fileSize + 1);
     if (!fileContents)
     {
         printf("Failed to allocate %i bytes\n", fileSize);
@@ -41,6 +41,7 @@ bool_t validate_file(const char* fname)
         return false;
     }
 
+    fileContents[fileSize] = 0;
     fread(fileContents, 1, fileSize, file);
     fclose(file);
     file = NULL;
@@ -74,7 +75,7 @@ int main(int argc, char** argv)
     assert(u0024 == 0x24);
     assert(u00A2 == 0xA2);
     assert(u20AC == 0x20AC);
-    assert(u10348 == 0x010348);
+    assert(u10348 == 0x10348);
     assert(utf8_encode(UTF8_BOM) == 0xFEFF);
     assert(utf8_encode(UTF8_REPLACEMENT) == 0xFFFD);
     assert(!utf8_valid("\xFF\xEE"));
@@ -98,6 +99,5 @@ int main(int argc, char** argv)
         }
     }
 
-    getchar();
     return 0;
 }
