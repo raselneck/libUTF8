@@ -56,12 +56,16 @@ int main(int argc, char** argv)
 {
     const char* two_chars = "\xE6\x97\xA5\xD1\x88";
     const char* message = "Hello, world!";
+    const utf8_codepoint_t* cp_str = NULL;
+    size_t      cp_strlen = 0;
     int32_t     index = 0;
 
     utf8_codepoint_t u0024  = utf8_encode("\x24"); // U+0024 == $
     utf8_codepoint_t u00A2  = utf8_encode("\xC2\xA2"); // U+00A2 == ¢
     utf8_codepoint_t u20AC  = utf8_encode("\xE2\x82\xAC"); // U+20AC == €
     utf8_codepoint_t u10348 = utf8_encode("\xF0\x90\x8D\x88"); // U+10348 == 𐍈
+
+    cp_str = utf8_encode_string("\x24\xE2\x82\xAC", &cp_strlen);
 
     assert(utf8_valid(two_chars));
     assert(utf8_valid(message));
@@ -76,6 +80,9 @@ int main(int argc, char** argv)
     assert(u00A2 == 0xA2);
     assert(u20AC == 0x20AC);
     assert(u10348 == 0x10348);
+    assert(cp_strlen == 2);
+    assert(cp_str[0] == u0024);
+    assert(cp_str[1] == u20AC);
     assert(utf8_encode(UTF8_BOM) == 0xFEFF);
     assert(utf8_encode(UTF8_REPLACEMENT) == 0xFFFD);
     assert(!utf8_valid("\xFF\xEE"));
@@ -99,6 +106,5 @@ int main(int argc, char** argv)
         }
     }
 
-    getchar();
     return 0;
 }

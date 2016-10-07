@@ -66,13 +66,24 @@ typedef enum utf8_error_t
 typedef int32_t utf8_codepoint_t;
 
 /**
- * \brief Encodes the given string data into a UTF-8 codepoint.
+ * \brief Encodes a single codepoint.
  *
- * \param str The string.
- * \return The encoded codepoint. Can return UTF8_INVALID_CODEPOINT if the string
+ * \param str The containing the codepoint.
+ * \return The encoded codepoint. Can return UTF8_INVALID_CODEPOINT if \p str
  *         does not contain a valid UTF-8 codepoint.
  */
 utf8_codepoint_t utf8_encode(const char* str);
+
+/**
+ * \brief Encodes an entire string into a series of UTF-8 codepoints.
+ *
+ * \param [in] str The string to encode.
+ * \param [out] length The length of the UTF-8 string.
+ * \return The encoded UTF-8 string, or NULL if the string is invalid.
+ *         The returned string is "null-terminated," meaning that the
+ *         last valid codepoint is followed by 0.
+ */
+utf8_codepoint_t* utf8_encode_string(const char* str, size_t* length);
 
 /**
  * \brief Checks to see if the given string contains the UTF-8 BOM.

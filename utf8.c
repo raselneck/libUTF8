@@ -18,8 +18,17 @@
  * SOFTWARE.
  */
 #include "utf8.h"
+#include <string.h> // For memcpy
 
-static const char* UTF8_BOM_INST = UTF8_BOM;
+/* Get a casting helper macro */
+#if defined(__cplusplus)
+    #define UTF8_CAST(Type, Expr) static_cast<Type>(Expr)
+#else
+    #define UTF8_CAST(Type, Expr) (Type)(Expr)
+#endif
+
+/* Declare an instance of the UTF8_BOM */
+static const char* const UTF8_BOM_INST = UTF8_BOM;
 
 /**
  * The iterator type used for iterating strings.
@@ -27,11 +36,11 @@ static const char* UTF8_BOM_INST = UTF8_BOM;
 typedef struct utf8_iterator_t
 {
     const char* str;
+    size_t str_len;
     const char* iter;
     utf8_codepoint_t cp;
     int32_t cp_mask;
-    int32_t cp_len;
-    size_t str_len;
+    size_t cp_len;
 } utf8_iterator_t;
 
 /**
@@ -69,7 +78,7 @@ int32_t utf8_iterate_move(utf8_iterator_t* iter);
  */
 bool_t utf8_get_codepoint_info(const char* str, int32_t* mask, int32_t* length)
 {
-    uint8_t ch = *str;
+    uint8_t ch = UTF8_CAST(uint8_t, *str);
 
     // TODO - Optimize this into a loop
 
@@ -147,10 +156,10 @@ utf8_codepoint_t utf8_encode_info(const char* str, int32_t mask, int32_t length)
 }
 
 /**
- * \brief Encodes the given string data into a UTF-8 codepoint.
+ * \brief Encodes a single codepoint.
  *
- * \param str The string.
- * \return The encoded codepoint. Can return UTF8_INVALID_CODEPOINT if the string
+ * \param str The containing the codepoint.
+ * \return The encoded codepoint. Can return UTF8_INVALID_CODEPOINT if \p str
  *         does not contain a valid UTF-8 codepoint.
  */
 utf8_codepoint_t utf8_encode(const char* str)
@@ -165,6 +174,42 @@ utf8_codepoint_t utf8_encode(const char* str)
     }
 
     return utf8_encode_info(str, mask, length);
+}
+
+/**
+ * \brief Encodes an entire string into a series of UTF-8 codepoints.
+ *
+ * \param [in] str The string to encode.
+ * \param [out] length The length of the UTF-8 string.
+ * \return The encoded UTF-8 string, or NULL if the string is invalid.
+ */
+utf8_codepoint_t* utf8_encode_string(const char* str, size_t* length)
+{
+    utf8_iterator_t iter;
+    utf8_codepoint_t* cpstr = NULL;
+    size_t cplen = 0;
+    int32_t status = 0;
+
+    /* Get the codepoint string length */
+    cplen = utf8_strlen(str);
+    if (cplen == UTF8_INVALID_STRING)
+    {
+        return NULL;
+    }
+
+    /* Allocate the memory for the string */
+    cpstr = UTF8_CAST(utf8_codepoint_t*, UTF8_MALLOC(cplen + 1));
+    cpstr[cplen] = 0;
+
+    /* Iterate the string */
+    utf8_iterate_begin(&iter, str);
+    while ((status = utf8_iterate_move(&iter)) == UTF8_ITERATOR_OK)
+    {
+        cpstr[iter.str_len - 1] = iter.cp;
+    }
+
+    *length = cplen;
+    return cpstr;
 }
 
 /**
@@ -208,17 +253,20 @@ void utf8_iterate_begin(utf8_iterator_t* iter, const char* str)
  */
 int32_t utf8_iterate_move(utf8_iterator_t* iter)
 {
+    int32_t cp_len = 0;
+
     if (!*iter->iter)
     {
         return UTF8_ITERATOR_END;
     }
 
-    if (!utf8_get_codepoint_info(iter->str, &iter->cp_mask, &iter->cp_len))
+    if (!utf8_get_codepoint_info(iter->iter, &iter->cp_mask, &cp_len))
     {
         return UTF8_ITERATOR_INVALID_CODEPOINT;
     }
 
-    iter->cp = utf8_encode_info(iter->str, iter->cp_mask, iter->cp_len);
+    iter->cp_len = UTF8_CAST(size_t, cp_len);
+    iter->cp = utf8_encode_info(iter->iter, iter->cp_mask, iter->cp_len);
     if (iter->cp == UTF8_INVALID_CODEPOINT)
     {
         return UTF8_ITERATOR_INVALID_CODEPOINT;
@@ -256,7 +304,7 @@ size_t utf8_strlen(const char* str)
 
     if (status == UTF8_ITERATOR_INVALID_CODEPOINT)
     {
-        return (size_t)UTF8_INVALID_STRING;
+        return UTF8_CAST(size_t, UTF8_INVALID_STRING);
     }
 
     return iter.str_len;
@@ -281,14 +329,14 @@ size_t utf8_strlen(const char* str)
         // Ensure there's a codepoint
         if (length_cp == UTF8_INVALID_LENGTH)
         {
-            return (size_t)UTF8_INVALID_STRING;
+            return UTF8_CAST(size_t, UTF8_INVALID_STRING);
         }
 
         // Get the codepoint and validate it
         codepoint = utf8_encode_info(iter, mask, length_cp);
         if (codepoint == UTF8_INVALID_CODEPOINT)
         {
-            return (size_t)UTF8_INVALID_STRING;
+            return UTF8_CAST(size_t, UTF8_INVALID_STRING);
         }
 
         length_str++;
