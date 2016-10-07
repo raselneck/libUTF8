@@ -182,6 +182,10 @@ utf8_codepoint_t utf8_encode(const char* str)
  * \param [in] str The string to encode.
  * \param [out] length The length of the UTF-8 string.
  * \return The encoded UTF-8 string, or NULL if the string is invalid.
+ *         The returned string is "null-terminated," meaning that the
+ *         last valid codepoint is followed by 0. This string is
+ *         allocated via UTF8_MALLOC, and therefore should be freed
+ *         using UTF8_FREE when possible.
  */
 utf8_codepoint_t* utf8_encode_string(const char* str, size_t* length)
 {

@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 {
     const char* two_chars = "\xE6\x97\xA5\xD1\x88";
     const char* message = "Hello, world!";
-    const utf8_codepoint_t* cp_str = NULL;
+    utf8_codepoint_t* cp_str = NULL;
     size_t      cp_strlen = 0;
     int32_t     index = 0;
 
@@ -90,6 +90,8 @@ int main(int argc, char** argv)
     assert(!utf8_valid("\xFE"));
     assert(utf8_valid_codepoint(utf8_encode("?")));
     assert(utf8_valid_codepoint(utf8_encode("\xE2\x82\xAC")));
+
+    UTF8_FREE(cp_str);
 
     if (argc > 1)
     {
